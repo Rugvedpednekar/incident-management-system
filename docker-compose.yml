@@ -1,0 +1,40 @@
+@"
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: incidents
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    environment:
+      SECRET_KEY: dev
+      JWT_SECRET_KEY: dev
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/incidents
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+
+  frontend:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE=http://localhost:5000/api
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+"@ | Set-Content -Encoding UTF8 .\docker-compose.yml
